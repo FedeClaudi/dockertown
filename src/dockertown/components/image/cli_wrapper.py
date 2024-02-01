@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import os
-import pty
+try:
+    import pty
+except:
+    pass
 import re
 import subprocess
 from datetime import datetime
@@ -26,6 +29,9 @@ from ...utils import (
 from .models import ImageGraphDriver, ImageInspectResult, ImageRootFS, ImageHistoryLayer, LayerPullStatus, \
     LayerPullProgress
 
+
+
+is_windows = os.name == "nt"
 
 class Image(ReloadableObjectFromJson):
     def __init__(
@@ -495,6 +501,9 @@ class ImageCLI(DockerCLICaller):
 
     def interactive_pull(self, x: str) -> Iterator[LayerPullProgress]:
         full_cmd = list(map(str, self.docker_cmd)) + ["pull", x]
+        
+        if is_windows:
+                raise NotImplementedError(f"Interactive pull is not yet implemented for Windows because of `pty`")
 
         master, slave = pty.openpty()
         p = subprocess.Popen(full_cmd, preexec_fn=os.setsid, stdin=slave, stdout=slave, stderr=slave)
